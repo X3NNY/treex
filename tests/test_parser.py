@@ -1,6 +1,6 @@
 import unittest
 from src.lexer import LaTeXLexer
-from src.parser import LaTeXParser
+from src.parse import LaTeXParser
 from src.nodes import CommandNode, DocumentNode, SectionNode, EnvironmentNode, MathNode, TextNode
 
 class TestLaTeXParser(unittest.TestCase):
