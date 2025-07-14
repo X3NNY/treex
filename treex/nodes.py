@@ -278,7 +278,7 @@ class ParagraphNode(ASTNode):
         
     def get_text_content(self, update: bool = False) -> str:
         if not self.content or update:
-            texts = [child.get_text_content() for child in self.children]
+            texts = [txt for child in self.children if (txt := child.get_text_content()) != ' ']
             self.content = ' '.join(texts)
         return self.content
 

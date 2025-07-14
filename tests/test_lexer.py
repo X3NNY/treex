@@ -8,7 +8,7 @@ class TestLaTeXLexer(unittest.TestCase):
 
     def test_simple_command(self):
         tokens = self.lexer.tokenize(r"\section")
-        self.assertEqual(len(tokens), 3)  # COMMAND, NEWLINE, EOF
+        self.assertEqual(len(tokens), 2)  # COMMAND, EOF
         self.assertEqual(tokens[0].type, TokenType.COMMAND)
         self.assertEqual(tokens[0].value, r"section")
 
@@ -19,7 +19,6 @@ class TestLaTeXLexer(unittest.TestCase):
             TokenType.BRACE_OPEN, # {
             TokenType.TEXT,       # Introduction
             TokenType.BRACE_CLOSE,# }
-            TokenType.NEWLINE,    # \n
             TokenType.EOF         # EOF
         ]
         self.assertEqual(len(tokens), len(expected_types))
@@ -38,7 +37,7 @@ class TestLaTeXLexer(unittest.TestCase):
 
     def test_environment(self):
         tokens = self.lexer.tokenize(r"\begin{document}\end{document}")
-        self.assertEqual(len(tokens), 4)  # ENV_BEGIN, ENV_END, NEW_LINE, EOF
+        self.assertEqual(len(tokens), 3)  # ENV_BEGIN, ENV_END, EOF
         self.assertEqual(tokens[0].type, TokenType.ENV_BEGIN)
         self.assertEqual(tokens[0].value, r"document")
         self.assertEqual(tokens[1].type, TokenType.ENV_END)
@@ -63,7 +62,6 @@ class TestLaTeXLexer(unittest.TestCase):
             TokenType.SPECIAL_CHAR,
             TokenType.SPECIAL_CHAR,
             TokenType.SPECIAL_CHAR,
-            TokenType.NEWLINE,
             TokenType.EOF
         ]
         self.assertEqual(len(tokens), len(expected_types))

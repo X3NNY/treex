@@ -1,7 +1,7 @@
 import unittest
 from treex.lexer import LaTeXLexer
 from treex.parse import LaTeXParser
-from treex.nodes import CommandNode, DocumentNode, SectionNode, EnvironmentNode, MathNode, TextNode
+from treex.nodes import CommandNode, DocumentNode, ParagraphNode, SectionNode, EnvironmentNode, MathNode, TextNode
 
 class TestLaTeXParser(unittest.TestCase):
     def test_parse_simple_document(self):
@@ -22,11 +22,11 @@ Hello, world!
         env = ast.environments[0]
         self.assertIsInstance(env, EnvironmentNode)
         self.assertEqual(env.name, "document")
-        self.assertEqual(len(env.children), 7)
-        self.assertIsInstance(env.children[1], SectionNode)
-        self.assertEqual(env.children[1].title.children[0].content, "Introduction")
-        self.assertIsInstance(env.children[3], TextNode)
-        self.assertEqual(env.children[3].content, "Hello,")
+        self.assertEqual(len(env.children), 1)
+        self.assertIsInstance(env.children[0], SectionNode)
+        self.assertEqual(env.children[0].title_text, "Introduction")
+        self.assertIsInstance(env.children[0].children[0], ParagraphNode)
+        self.assertEqual(env.children[0].children[0].get_text_content(), "Hello, world!")
 
     def test_parse_math(self):
         latex_source = r"$E=mc^2$ and $$\int_a^b f(x)dx$$"
@@ -35,7 +35,7 @@ Hello, world!
         parser = LaTeXParser(tokens)
         ast = parser.parse()
         
-        self.assertEqual(len(ast.children), 6)
+        self.assertEqual(len(ast.children), 5)
         self.assertIsInstance(ast.children[0], MathNode)
         self.assertEqual(ast.children[0].content, "E=mc^2")
         self.assertFalse(ast.children[0].display)
@@ -49,11 +49,11 @@ Hello, world!
         latex_source = r"\textbf{Bold text} \emph{Italic text}"
         lexer = LaTeXLexer()
         tokens = lexer.tokenize(latex_source)
-        self.assertEqual(len(tokens), 15)
+        self.assertEqual(len(tokens), 14)
         parser = LaTeXParser(tokens)
         ast = parser.parse()
         
-        self.assertEqual(len(ast.children), 4)
+        self.assertEqual(len(ast.children), 3)
         self.assertIsInstance(ast.children[0], CommandNode)
         self.assertEqual(ast.children[0].name, "textbf")
         self.assertEqual(len(ast.children[0].parameters[0].children), 3)
@@ -74,13 +74,13 @@ Hello, world!
         ast = parser.parse()
         
         sections = ast.sections
-        self.assertEqual(len(sections), 3)
+        self.assertEqual(len(sections), 1)
         self.assertEqual(sections[0].level, 1)
-        self.assertEqual(sections[0].title.children[0].content, "First")
-        self.assertEqual(sections[1].level, 2)
-        self.assertEqual(sections[1].title.children[0].content, "Second")
-        self.assertEqual(sections[2].level, 3)
-        self.assertEqual(sections[2].title.children[0].content, "Third")
+        self.assertEqual(sections[0].title_text, "First")
+        self.assertEqual(sections[0].children[0].level, 2)
+        self.assertEqual(sections[0].children[0].title_text, "Second")
+        self.assertEqual(sections[0].children[0].children[0].level, 3)
+        self.assertEqual(sections[0].children[0].children[0].title_text, "Third")
 
 if __name__ == '__main__':
     unittest.main()

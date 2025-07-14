@@ -183,7 +183,7 @@ class LaTeXParser:
             if isinstance(parent, SectionNode) and parent.level < section_node.level:
                 break
             
-            if parent == self.document:
+            if (isinstance(parent, EnvironmentNode) and parent.name == 'document') or parent == self.document:
                 break
             
             parent = parent.parent
