@@ -188,9 +188,6 @@ class LaTeXParser:
             
             parent = parent.parent
         
-        if isinstance(parent, SectionNode):
-            print(parent.level, section_node.level, section_node.title)
-        
         # Add section to current parent
         parent.add_child(section_node)
         self.current_node = section_node
