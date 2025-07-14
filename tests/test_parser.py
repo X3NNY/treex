@@ -1,7 +1,7 @@
 import unittest
-from src.lexer import LaTeXLexer
-from src.parse import LaTeXParser
-from src.nodes import CommandNode, DocumentNode, SectionNode, EnvironmentNode, MathNode, TextNode
+from treex.lexer import LaTeXLexer
+from treex.parse import LaTeXParser
+from treex.nodes import CommandNode, DocumentNode, SectionNode, EnvironmentNode, MathNode, TextNode
 
 class TestLaTeXParser(unittest.TestCase):
     def test_parse_simple_document(self):

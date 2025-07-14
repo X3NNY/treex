@@ -1,6 +1,6 @@
 import unittest
-from src.lexer import LaTeXLexer
-from src.tokens import TokenType, Token
+from treex.lexer import LaTeXLexer
+from treex.tokens import TokenType, Token
 
 class TestLaTeXLexer(unittest.TestCase):
     def setUp(self):
