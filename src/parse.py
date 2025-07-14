@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, cast
+from typing import List, Literal, Optional, TypeVar, cast
 from .errors import ParserError
 from .registry import CommandRegistry
 from .tokens import TokenType, Token
@@ -17,6 +17,7 @@ from .nodes import (
     ASTNode,
 )
 
+T = TypeVar('T', bound=ASTNode)
 
 class LaTeXParser:
     """LaTeX parser that converts token stream into Abstract Syntax Tree (AST)."""
@@ -92,7 +93,26 @@ class LaTeXParser:
         while self.current_token:
             self.parse_token()
         
+        self.post_process()
+        
         return self.document
+
+    def post_process(self):
+        self.prune(self.document)
+    
+    def prune(self, node: T):
+        removes = []
+        for idx, child in enumerate(node.children):
+            length = len(child.children)
+            if isinstance(child, ParagraphNode) and length == 0:
+                removes.append(idx)
+            
+            if length > 0:
+                self.prune(child)
+        
+        if removes:
+            node.remove_childs(removes)
+        
     
     def parse_command(self) -> None:
         """Parse LaTeX command."""
@@ -209,6 +229,9 @@ class LaTeXParser:
             # End environment
             if isinstance(self.current_node, EnvironmentNode) and self.current_node.name == env_name:
                 self.current_node = self.current_node.parent
+            
+            if env_name == 'document':
+                self.in_document_env = False
         
         self.advance()
     
@@ -313,25 +336,6 @@ class LaTeXParser:
         # Restore context
         self.current_node = prev_node
     
-    def parse_paragraph(self) -> None:
-        """Parse paragraph content."""
-        paragraph = ParagraphNode()
-        self.current_node.add_child(paragraph)
-        
-        prev_node = self.current_node
-        self.current_node = paragraph
-        
-        # Collect until two consecutive newlines
-        while self.current_token:
-            if (self.current_token.type == TokenType.NEWLINE and 
-                self.peek_next() and self.peek_next().type == TokenType.NEWLINE):
-                self.advance()  # Skip first newline
-                self.advance()  # Skip second newline
-                break
-            self.parse_token()
-        
-        self.current_node = prev_node
-    
     def parse_text(self) -> None:
         """Parse text content."""
         if not self.text_merge:
@@ -420,11 +424,11 @@ class LaTeXParser:
             if count > 1:
                 # Double newline - start new paragraph
                 self._start_new_paragraph()
-            elif len(self.current_node.children) > 0:
-                # Single newline - convert to space
-                space = TextNode(' ')
-                space.is_newline_converted = True
-                self.current_node.add_child(space)
+            # elif len(self.current_node.children) > 0 and not isinstance(self.current_node, ParagraphNode):
+            #     # Single newline - convert to space
+            #     space = TextNode(' ')
+            #     space.is_newline_converted = True
+            #     self.current_node.add_child(space)
         if self.current_token:
             self.advance()
 

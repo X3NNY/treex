@@ -17,6 +17,15 @@ class ASTNode:
         node.index = len(self.children)
         self.children.append(node)
     
+    def remove_childs(self, indexs: List[int]) -> int:
+        """Remove childs by index"""
+        new_childs = []
+        for child in self.children:
+            if child.index not in indexs:
+                child.index = len(new_childs)
+                new_childs.append(child)
+        self.children = new_childs
+    
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({len(self.children)})"
     
