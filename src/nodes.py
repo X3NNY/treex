@@ -37,6 +37,34 @@ class ASTNode:
                 results.append(child)
             results.extend(child._find_all(node_type))
         return results
+    
+    def _find_env(self, name: Optional[str] = None) -> Optional[T]:
+        res = None
+        for child in self.children:
+            if isinstance(child, EnvironmentNode):
+                if name is None or child.name == name:
+                    res = child
+                    break
+            res = child._find_env(name)
+            
+            if res:
+                break
+        
+        return res
+    
+    def _find_cmd(self, name: Optional[str] = None) -> Optional[T]:
+        res = None
+        for child in self.children:
+            if isinstance(child, CommandNode):
+                if name is None or child.name == name:
+                    res = child
+                    break
+            res = child._find_cmd(name)
+            
+            if res:
+                break
+        
+        return res
 
     def to_tree(self, indent: int = 0, last: bool = True, prefix: str = '') -> str:
         """
@@ -68,6 +96,8 @@ class ASTNode:
     def _node_description(self) -> str:
         """Node description, can be overridden by subclasses."""
         return self.__class__.__name__
+    
+    def get_text_content(self): ...
 
 
 class DocumentNode(ASTNode):
@@ -85,6 +115,14 @@ class DocumentNode(ASTNode):
     def commands(self) -> List[CommandNode]:
         return self._find_all(CommandNode)
     
+    @property
+    def abstract(self) -> Optional[EnvironmentNode]:
+        return self._find_env('abstract')
+    
+    @property
+    def title(self) -> Optional[CommandNode]:
+        return self._find_cmd('title')
+    
     def _node_description(self) -> str:
         return "Document"
 
@@ -97,6 +135,33 @@ class EnvironmentNode(ASTNode):
         self.name: str = name
         self.options: List[Any] = []
         self.parameters: List[Any] = []
+    
+    
+    def get_text_content(self) -> str:
+        """Get the text content of the environment, including options and parameters.
+    
+        Returns:
+            String representation of the environment content in LaTeX format.
+        """
+        options_str = ""
+        if self.options:
+            options_str = "".join(
+                f"[{option.get_text_content()}]"
+                for option in self.options
+            )
+        
+        params_str = "".join(
+            f"{{{param.get_text_content()}}}"
+            for param in self.parameters
+        )
+        
+        body_content = "".join(
+            child.get_text_content() 
+            for child in self.children
+            if hasattr(child, 'get_text_content')
+        )
+        
+        return f"\\begin{{{self.name}}}{options_str}{params_str}{body_content}\\end{{{self.name}}}"
     
     def _node_description(self) -> str:
         return f"Environment: \\{self.name}"
@@ -203,11 +268,19 @@ class ParagraphNode(ASTNode):
     
     def __init__(self) -> None:
         super().__init__()
-        self.is_continuation: bool = False  # Whether created by single newline
+        self.content: Optional[str] = None
         
-    def get_text_content(self) -> str:
-        text = super().get_text_content()
-        return text + ('\n\n' if not self.is_continuation else ' ')
+    @property
+    def text_content(self):
+        if self.content is None:
+            return self.get_text_content()
+        return self.content
+        
+    def get_text_content(self, update: bool = False) -> str:
+        if not self.content or update:
+            texts = [child.get_text_content() for child in self.children]
+            self.content = ' '.join(texts)
+        return self.content
 
 
 class TextNode(ASTNode):
@@ -265,6 +338,17 @@ class MathNode(ASTNode):
             return f"Math ({mode}): '{content[:20]}...'"
         return f"Math ({mode}): '{content}'"
 
+    def get_text_content(self, pack: bool = True) -> str:
+        if pack:
+            if self.display:
+                text = f'$${self.content}$$'
+            else:
+                text = f'${self.content}$'
+            
+            return text
+        
+        return self.content
+        
 
 class GroupNode(ASTNode):
     """Group node (represents content in {} or [])."""
