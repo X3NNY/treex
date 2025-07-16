@@ -157,9 +157,9 @@ class LaTeXLexer:
         elif char.isspace() or char == '\n':
             self._flush_buffer()
             if char == '\n':
-                self.tokens.append(Token(TokenType.NEWLINE, char, self.position))
+                self.tokens.append(Token(TokenType.NEWLINE, '\n', self.position))
             else:
-                self.tokens.append(Token(TokenType.SPACE, char, self.position))
+                self.tokens.append(Token(TokenType.SPACE, ' ', self.position))
         
         # Normal text character
         else:
