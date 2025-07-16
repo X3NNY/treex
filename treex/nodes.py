@@ -103,9 +103,28 @@ class ASTNode:
 class DocumentNode(ASTNode):
     """Document root node."""
     
+    def __init__(self):
+        super().__init__()
+        self.docenv_node = None
+        self.section_nodes = []
+    
+    @property
+    def document(self):
+        if not self.docenv_node:
+            self.docenv_node = self._find_env('document')
+        
+        return self.docenv_node
+    
     @property
     def sections(self) -> List[SectionNode]:
-        return [node for node in self.children if isinstance(node, SectionNode)]
+        if self.section_nodes:
+            return self.section_nodes
+        
+        if not self.docenv_node and not self.document:
+            return []
+        
+        self.section_nodes = [node for node in self.docenv_node.children if isinstance(node, SectionNode)]
+        return self.section_nodes
     
     @property
     def environments(self) -> List[EnvironmentNode]:
@@ -178,7 +197,7 @@ class CommandNode(ASTNode):
         
     def get_text_content(self) -> str:
         """Get text content from command parameters."""
-        return ''.join(param.get_text_content() for param in self.parameters)
+        return f'\\{self.name}{{{"".join(param.get_text_content() for param in self.parameters)}}}'
     
     def get_optional_args(self) -> List[Any]:
         """Get all optional arguments."""
