@@ -120,10 +120,12 @@ class DocumentNode(ASTNode):
         if self.section_nodes:
             return self.section_nodes
         
-        if not self.docenv_node and not self.document:
-            return []
-        
-        self.section_nodes = [node for node in self.docenv_node.children if isinstance(node, SectionNode)]
+        if not self.docenv_node:
+            if not self.document:
+                self.section_nodes = [node for node in self.children if isinstance(node, SectionNode)]
+            else:
+                self.section_nodes = [node for node in self.docenv_node.children if isinstance(node, SectionNode)]
+            
         return self.section_nodes
     
     @property
