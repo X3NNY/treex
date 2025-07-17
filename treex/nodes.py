@@ -199,8 +199,8 @@ class CommandNode(ASTNode):
         
     def get_text_content(self) -> str:
         """Get text content from command parameters."""
-        return f'\\{self.name}{{{"".join(param.get_text_content() for param in self.parameters)}}}'
-    
+        return f'\\{self.name}{ "".join(f"{{{param.get_text_content()}}}" for param in self.parameters) }'
+
     def get_optional_args(self) -> List[Any]:
         """Get all optional arguments."""
         return [arg for arg in self.options if arg.is_optional]
@@ -299,8 +299,8 @@ class ParagraphNode(ASTNode):
         
     def get_text_content(self, update: bool = False) -> str:
         if not self.content or update:
-            texts = [txt for child in self.children if (txt := child.get_text_content()) != ' ']
-            self.content = ' '.join(texts)
+            texts = [child.get_text_content() for child in self.children]
+            self.content = ''.join(texts)
         return self.content
 
 
